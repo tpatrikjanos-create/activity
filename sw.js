@@ -1,5 +1,16 @@
-const CACHE = 'activity-v1';
-const ASSETS = ['/', '/index.html', '/css/style.css', '/js/data.js', '/js/app.js', '/manifest.json'];
+const CACHE = 'activity-v2';
+const BASE = '/activity';
+const ASSETS = [
+  BASE + '/',
+  BASE + '/index.html',
+  BASE + '/css/style.css',
+  BASE + '/js/sounds.js',
+  BASE + '/js/data.js',
+  BASE + '/js/app.js',
+  BASE + '/manifest.json',
+  BASE + '/icons/icon-192.png',
+  BASE + '/icons/icon-512.png'
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
@@ -14,8 +25,10 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  if (e.request.url.includes('api.anthropic.com') || e.request.url.includes('fonts.googleapis.com')) return;
+  if (e.request.url.includes('api.anthropic.com') ||
+      e.request.url.includes('fonts.googleapis.com') ||
+      e.request.url.includes('cdn.jsdelivr.net')) return;
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match('/index.html')))
+    caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match(BASE + '/index.html')))
   );
 });
