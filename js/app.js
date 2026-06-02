@@ -159,20 +159,29 @@ const UI = {
   },
   startFullscreen() {
     const el = document.getElementById('fs-start');
-    document.documentElement.requestFullscreen().catch(()=>{}).finally(()=>{
-      el.style.display = 'none';
-      const icon = document.getElementById('fs-icon');
-      if (icon) icon.className = 'ti ti-arrows-minimize';
-    });
-    setTimeout(()=>{ el.style.display = 'none'; }, 500);
+    const d = document.documentElement;
+    const req = d.requestFullscreen || d.webkitRequestFullscreen || d.mozRequestFullScreen || d.msRequestFullscreen;
+    if (req) {
+      req.call(d).catch(()=>{});
+    }
+    // Overlay mindenképpen eltűnik
+    el.style.opacity = '0';
+    el.style.transition = 'opacity 0.3s';
+    setTimeout(()=>{ el.style.display = 'none'; }, 350);
+    const icon = document.getElementById('fs-icon');
+    if (icon) icon.className = 'ti ti-arrows-minimize';
   },
   toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(()=>{});
+    const d = document.documentElement;
+    const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+    if (!isFs) {
+      const req = d.requestFullscreen || d.webkitRequestFullscreen || d.mozRequestFullScreen || d.msRequestFullscreen;
+      if (req) req.call(d).catch(()=>{});
       const icon = document.getElementById('fs-icon');
       if (icon) icon.className = 'ti ti-arrows-minimize';
     } else {
-      document.exitFullscreen();
+      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
+      if (exit) exit.call(document);
       const icon = document.getElementById('fs-icon');
       if (icon) icon.className = 'ti ti-arrows-maximize';
     }
@@ -236,7 +245,8 @@ function generateFallback(category) {
 /* ===== APP ===== */
 const App = {
   async drawCard() {
-    if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+    const _isFs = document.fullscreenElement || document.webkitFullscreenElement;
+    if(!_isFs){ const _d=document.documentElement; const _r=_d.requestFullscreen||_d.webkitRequestFullscreen; if(_r)_r.call(_d).catch(()=>{}); }
     SoundEngine.play('card-draw');
     const category = CATEGORIES.find(c => c.id === state.activeCategoryId);
     if (!category) return;
@@ -338,9 +348,12 @@ function init() {
   document.getElementById('gm-password-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') UI.gmLogin();
   });
-  document.addEventListener('fullscreenchange', () => {
-    const icon = document.getElementById('fs-icon');
-    if (icon) icon.className = document.fullscreenElement ? 'ti ti-arrows-minimize' : 'ti ti-arrows-maximize';
+  ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange'].forEach(ev => {
+    document.addEventListener(ev, () => {
+      const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+      const icon = document.getElementById('fs-icon');
+      if (icon) icon.className = isFs ? 'ti ti-arrows-minimize' : 'ti ti-arrows-maximize';
+    });
   });
   UI.showState('idle');
 }
