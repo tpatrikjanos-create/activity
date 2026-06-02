@@ -156,6 +156,26 @@ const UI = {
   },
   setLoading(on) {
     document.getElementById('loading-overlay').style.display = on ? 'flex' : 'none';
+  },
+  startFullscreen() {
+    const el = document.getElementById('fs-start');
+    document.documentElement.requestFullscreen().catch(()=>{}).finally(()=>{
+      el.style.display = 'none';
+      const icon = document.getElementById('fs-icon');
+      if (icon) icon.className = 'ti ti-arrows-minimize';
+    });
+    setTimeout(()=>{ el.style.display = 'none'; }, 500);
+  },
+  toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(()=>{});
+      const icon = document.getElementById('fs-icon');
+      if (icon) icon.className = 'ti ti-arrows-minimize';
+    } else {
+      document.exitFullscreen();
+      const icon = document.getElementById('fs-icon');
+      if (icon) icon.className = 'ti ti-arrows-maximize';
+    }
   }
 };
 
@@ -216,6 +236,7 @@ function generateFallback(category) {
 /* ===== APP ===== */
 const App = {
   async drawCard() {
+    if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
     SoundEngine.play('card-draw');
     const category = CATEGORIES.find(c => c.id === state.activeCategoryId);
     if (!category) return;
@@ -316,6 +337,10 @@ function init() {
   if (cat) document.getElementById('active-cat-name').textContent = cat.name;
   document.getElementById('gm-password-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') UI.gmLogin();
+  });
+  document.addEventListener('fullscreenchange', () => {
+    const icon = document.getElementById('fs-icon');
+    if (icon) icon.className = document.fullscreenElement ? 'ti ti-arrows-minimize' : 'ti ti-arrows-maximize';
   });
   UI.showState('idle');
 }
